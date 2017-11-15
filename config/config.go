@@ -30,6 +30,7 @@ type Config struct {
 	ConvertToNumbers     bool               `config:"convert_to_numbers"`
 	CleanFieldNames      bool               `config:"clean_field_names"`
 	WriteCursorState     bool               `config:"write_cursor_state"`
+	ParseJSON            bool               `config:"parse_json"`
 	CursorStateFile      string             `config:"cursor_state_file"`
 	CursorFlushPeriod    time.Duration      `config:"cursor_flush_period" validate:"min=0"`
 	PendingQueue         pendingQueueConfig `config:"pending_queue"`

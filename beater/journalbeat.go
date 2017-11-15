@@ -209,6 +209,7 @@ func (jb *Journalbeat) Run(b *beat.Beat) error {
 			rawEvent,
 			jb.config.CleanFieldNames,
 			jb.config.ConvertToNumbers,
+			jb.config.ParseJSON,
 			jb.config.MoveMetadataLocation)
 
 		if _, ok := event["type"].(string); !ok {
