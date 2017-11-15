@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"bytes"
 
-	"github.com/elastic/beats/libbeat/logp"
 	"github.com/coreos/go-systemd/sdjournal"
 	"github.com/elastic/beats/libbeat/common"
 	"github.com/elastic/beats/libbeat/common/jsontransform"
@@ -33,6 +32,7 @@ import (
 // - remove underscores from the beginning of fields as they are reserved in
 //   ElasticSearch for metadata information
 // - fields that can be converted to numbers, will be converted to numbers
+// - fields that contains JSON strings are parsed
 func MapStrFromJournalEntry(ev *sdjournal.JournalEntry, cleanKeys bool, convertToNumbers bool, parseJSON bool, MoveMetadataLocation string) common.MapStr {
 	m := common.MapStr{}
 	// for the sake of MoveMetadataLocation we will write all the JournalEntry data except the "message" here
@@ -53,7 +53,6 @@ func MapStrFromJournalEntry(ev *sdjournal.JournalEntry, cleanKeys bool, convertT
 		nv := makeNewValue(v, convertToNumbers, parseJSON)
 		// message Field should be on the top level of the event
 		if nk == "message" {
-			logp.Info("Message=%s",nv)
 			m[nk] = nv
 			continue
 		}
@@ -72,20 +71,15 @@ func makeNewKey(key string, cleanKeys bool) string {
 }
 
 func makeNewValue(value string, convertToNumbers bool, parseJSON bool) interface{} {
-	logp.Info(value)
-	if parseJSON {
-		if value[0] == '{' && value[len(value)-1] == '}' {
-			//var jm map[string]interface{}
-			var jm map[string] interface{}
-			//s, _ := strconv.Unquote(value)
-			//logp.Info(s)
-			dec := json.NewDecoder(bytes.NewReader([]byte(value)))
-			dec.UseNumber()
-			dec.Decode(&jm)
+	if parseJSON && value[0] == '{' {
+		var jm map[string] interface{}
+		dec := json.NewDecoder(bytes.NewReader([]byte(value)))
+		dec.UseNumber()
+		if err := dec.Decode(&jm); err == nil {
 			jsontransform.TransformNumbers(jm)
 			return jm
 		}
-}
+	}
 	switch value {
 	// convert booleans if possible
 	// strconv.ParseBool is unfortunately too forgiving,

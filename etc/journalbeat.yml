@@ -43,6 +43,9 @@ journalbeat:
   # (defaults to false)
   #convert_to_numbers: false
 
+  # Try to detect and parse JSON in journal entries
+  #parse_json: false
+
   # Store all the fields of the Systemd Journal entry under this field
   # Can be almost any string suitable to be a field name of an ElasticSearch document.
   # Dots can be used to create nested fields.
