@@ -18,10 +18,12 @@ import (
 	"strconv"
 	"strings"
 	"encoding/json"
+	"bytes"
 
 	"github.com/elastic/beats/libbeat/logp"
 	"github.com/coreos/go-systemd/sdjournal"
 	"github.com/elastic/beats/libbeat/common"
+	"github.com/elastic/beats/libbeat/common/jsontransform"
 )
 
 // MapStrFromJournalEntry takes a JournalD entry and converts it to an event
@@ -73,12 +75,15 @@ func makeNewValue(value string, convertToNumbers bool, parseJSON bool) interface
 	logp.Info(value)
 	if parseJSON {
 		if value[0] == '{' && value[len(value)-1] == '}' {
-			var jm map[string]interface{}
+			//var jm map[string]interface{}
+			var jm map[string] interface{}
 			//s, _ := strconv.Unquote(value)
 			//logp.Info(s)
-			if err := json.Unmarshal([]byte(value), &jm); err == nil {
-				return jm
-			}
+			dec := json.NewDecoder(bytes.NewReader([]byte(value)))
+			dec.UseNumber()
+			dec.Decode(&jm)
+			jsontransform.TransformNumbers(jm)
+			return jm
 		}
 }
 	switch value {
